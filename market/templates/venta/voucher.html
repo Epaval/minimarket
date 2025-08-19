@@ -1,0 +1,217 @@
+{% load math_extras %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprobante - Market DJ</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      margin: 10px;
+      color: #000;
+      background: #fff;
+      max-width: 80mm;
+      line-height: 1.4;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 8px;
+    }
+    .header h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .header p {
+      margin: 2px 0;
+      font-size: 11px;
+      color: #333;
+    }
+    .cliente-info {
+      background: #f8f8f8;
+      border: 1px dashed #aaa;
+      padding: 6px;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .cliente-info strong {
+      font-weight: 600;
+    }
+    .info {
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .info td {
+      padding: 2px 0;
+    }
+    .label {
+      font-weight: bold;
+      width: 45%;
+    }
+    .productos {
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .productos ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .productos li {
+      padding: 1px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .productos .item-name {
+      display: inline-block;
+      width: 40%;
+      vertical-align: top;
+    }
+    .productos .item-details {
+      display: inline-block;
+      width: 58%;
+      text-align: right;
+      vertical-align: top;
+    }
+    .total {
+      text-align: right;
+      font-weight: bold;
+      font-size: 13px;
+      margin-top: 8px;
+      border-top: 1px dashed #000;
+      padding-top: 6px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: #555;
+      margin-top: 15px;
+      border-top: 1px dashed #ccc;
+      padding-top: 8px;
+    }
+    .bar-code {
+      text-align: center;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      letter-spacing: 3px;
+      font-weight: bold;
+    }
+    .warning {
+      font-size: 10px;
+      color: #d00;
+      text-align: center;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Encabezado compacto en una sola fila -->
+<div class="grid-x" style="margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 6px; align-items: center; font-size: 12px;">
+  
+  <!-- Logo (izquierda) -->
+  <div class="cell shrink" style="padding-right: 10px;">
+    <img src="{{ logo_url }}" alt="Logo" style="width: 60px; height: auto;">
+  </div>
+
+  <!-- Datos (derecha, texto alineado a la derecha) -->
+  <div class="cell auto text-right" style="line-height: 1.5;">
+    <strong>Market JP C.A</strong><br>
+    RIF: J00000000-0<br>
+    Av. Comercio 123, Valencia - Venezuela<br>
+    Tel: (041) 123-4567
+  </div>
+
+</div>
+  {% comment %} DEBUG: ¿Se cargó el filtro? {% endcomment %}
+
+
+  <!-- Número de comprobante (código de barras visual) -->
+  <div class="bar-code">
+    {{ venta.id|stringformat:"06d" }}
+  </div>
+
+  <!-- Información del cliente -->
+  {% if venta.cliente %}
+    <div class="cliente-info">
+      <strong>Cliente:</strong> {{ venta.cliente.nombre }} {{ venta.cliente.apellido|default:"" }}<br>
+      {% if venta.cliente.dni %}
+        <strong>CI/RIF:</strong> {{ venta.cliente.dni }}<br>
+      {% endif %}
+      {% if venta.cliente.telefono %}
+        <strong>Tel:</strong> {{ venta.cliente.telefono }}
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="warning">
+      ⚠️ Venta sin cliente registrado
+    </div>
+  {% endif %}
+
+  <!-- Detalles de la venta -->
+  <div class="info">
+    <table>
+      <tr>
+        <td class="label">N°:</td>
+        <td>{{ venta.id|stringformat:"06d" }}</td>
+      </tr>
+      <tr>
+        <td class="label">Fecha:</td>
+        <td>{{ venta.date_sale|date:"d/m/Y H:i" }}</td>
+      </tr>
+      <tr>
+        <td class="label">Productos:</td>
+        <td>{{ venta.count }}</td>
+      </tr>
+      <tr>
+        <td class="label">Tipo:</td>
+        <td>{{ venta.get_type_invoce_display }}</td>
+      </tr>
+      <tr>
+        <td class="label">Pago:</td>
+        <td>{{ venta.get_type_payment_display }}</td>
+      </tr>
+      <tr>
+        <td class="label">Cajero:</td>
+        <td>{{ venta.user.full_name|default:venta.user.email }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Lista de productos -->
+  <div class="productos">
+    <h4 style="margin: 0 0 5px 0; font-size: 12px;">DETALLE</h4>
+    <ul>
+      {% for item in detalle_productos %}
+        <li>
+          <span class="item-name">{{ item.product.name|truncatechars:20 }}</span>
+          <span class="item-details">
+            {{ item.count }}x S/{{ item.price_sale|floatformat:2 }} = 
+            S/{{ item.count|mul:item.price_sale|floatformat:2 }}
+          </span>
+        </li>
+      {% empty %}
+        <li>No se registraron productos.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Total -->
+  <div class="total">
+    TOTAL: S/ {{ venta.amount|floatformat:2 }}
+  </div>
+
+  <!-- Pie de página -->
+  <div class="footer">
+    <p>¡Gracias por su compra!</p>
+    <p>Consumo voluntario - No válido como factura</p>
+    <p>Market DJ © {{ venta.date_sale|date:"Y" }}</p>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,280 @@
+{% extends "venta/base_venta.html" %}
+{% load static %}
+
+{% block panel-content %}
+
+<div class="grid-x grid-margin-x align-stretch" style="padding: 1.5rem 0;">
+
+  <!-- === BARRA DE BÚSQUEDA Y ACCIONES RÁPIDAS === -->
+  <div class="cell grid-x grid-margin-x align-middle"
+    style="margin-bottom: 1.5rem; background: #1a1a1a; color: white; border-radius: 0.75rem; padding: 1rem;">
+
+    <!-- Búsqueda de producto -->
+    <div class="cell medium-6">
+      <form class="input-group" method="POST">{% csrf_token %}
+        <span class="input-group-label" style="background: #6d28d9; color: white;">
+          <i class="fi-barcode"></i>
+        </span>
+        {{ form.barcode }}
+        {{ form.count }}
+        <div class="input-group-button">
+          <input type="submit" class="button" style="background: #ffae00; color: #1a1a1a; font-weight: 600;"
+            value="Agregar">
+        </div>
+      </form>
+    </div>
+
+    <!-- Botón: Cobrar (único acceso al flujo de pago) -->
+    <div class="cell medium-6 text-right">
+      <button data-open="modal-seleccionar-cliente" class="button success expanded">
+        <i class="fi-print"></i> Cobrar
+      </button>
+    </div>
+  </div>
+
+  <!-- === LISTA DE PRODUCTOS EN CARRITO === -->
+  <div class="cell large-8">
+    <h5 style="color: #333; margin-bottom: 1rem;">
+      <i class="fi-shopping-cart"></i> Productos en Venta
+    </h5>
+
+    {% if productos %}
+    <table class="hover stack"
+      style="border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.1);">
+      <thead style="background: #6d28d9; color: white;">
+        <tr>
+          <th style="border-top-left-radius: 0.5rem;">CÓDIGO</th>
+          <th>NOMBRE</th>
+          <th>PRECIO</th>
+          <th>CANT.</th>
+          <th style="border-top-right-radius: 0.5rem;">ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for producto in productos %}
+        <tr style="transition: background 0.2s;">
+          <td>{{ producto.barcode }}</td>
+          <td>{{ producto.product.name }}</td>
+          <td>S/ {{ producto.product.sale_price }}</td>
+          <td>{{ producto.count }}</td>
+          <td class="text-center">
+            <div class="button-group compact">
+              <form action="{% url 'venta_app:carshop-update' producto.id %}" method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="button warning tiny" title="Restar 1">
+                  <i class="fi-minus"></i>
+                </button>
+              </form>
+              <form action="{% url 'venta_app:carshop-delete' producto.id %}" method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="button alert tiny" title="Eliminar">
+                  <i class="fi-x"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="callout text-center"
+      style="background: #f8fafc; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 0.5rem; padding: 2rem;">
+      <i class="fi-page-search" style="font-size: 2rem; opacity: 0.5;"></i>
+      <p style="margin-top: 0.5rem;">No hay productos en el carrito.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- === RESUMEN Y ACCIONES === -->
+  <div class="cell large-4">
+    <div class="callout primary"
+      style="background: #6d28d9; color: white; text-align: center; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);">
+      <h5 style="margin: 0; opacity: 0.9;">Total a Cobrar</h5>
+      <h2 style="margin: 0.5rem 0; font-size: 2rem; font-weight: 700;">S/ {{ total_cobrar|default:"0.00" }}</h2>
+    </div>
+
+    <br>
+
+    <form action="{% url 'venta_app:carshop-delete_all' %}" method="POST">
+      {% csrf_token %}
+      <button type="submit" class="button alert hollow expanded"
+        onclick="return confirm('¿Estás seguro de limpiar todo el carrito?');">
+        <i class="fi-trash"></i> Limpiar Todo
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<!-- === MODAL 1: SELECCIONAR CLIENTE (SOLO LECTURA) === -->
+<div class="reveal" id="modal-seleccionar-cliente" data-reveal style="max-width: 600px;">
+  <h4 style="color: #1a1a1a;">
+    <i class="fi-user"></i> Seleccionar Cliente
+  </h4>
+
+  <form id="form-voucher" action="{% url 'venta_app:venta-voucher' %}" method="POST">
+    {% csrf_token %}
+
+    <div class="grid-x grid-margin-x">
+
+      <!-- Buscador de cliente (Select2) -->
+      <div class="cell medium-12">
+        <label>Buscar cliente por nombre o CI/RIF:</label>
+        <select name="cliente" id="id_cliente_select" class="select2-cliente" style="width: 100%;" required>
+          <option value="">Selecciona un cliente *</option>
+          {% for cliente in clientes_activos %}
+            <option value="{{ cliente.id }}">
+              {{ cliente.nombre }} {{ cliente.apellido|default:"" }} 
+              {% if cliente.dni %}(CI/RIF: {{ cliente.dni }}){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+        <p class="form-error" id="error-cliente" style="color: #e3342f; font-size: 0.875rem; display: none;">
+          Debe seleccionar un cliente.
+        </p>
+      </div>
+
+      <!-- Botón para registrar nuevo cliente -->
+      <div class="cell text-center" style="margin: 1rem 0;">
+        <small>
+          ¿No encuentras al cliente?
+          <a data-open="modal-nuevo-cliente"
+             style="color: #6d28d9; font-weight: 600; text-decoration: underline; cursor: pointer;">
+            Registrar nuevo cliente
+          </a>
+        </small>
+      </div>
+
+      <!-- Tipo de Pago y Comprobante -->
+      <div class="cell medium-6">
+        <label>Tipo de Pago:</label>
+        <div class="input-group">
+          <span class="input-group-label" style="background: #4a5568; color: white;">
+            <i class="fi-credit-card"></i>
+          </span>
+          <select name="type_payment" required style="padding: 0.5rem;">
+            <option value="1">Cash</option>
+            <option value="0">Tarjeta</option>
+            <option value="2">Bono</option>
+            <option value="3">Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cell medium-6">
+        <label>Tipo de Comprobante:</label>
+        <div class="input-group">
+          <span class="input-group-label" style="background: #4a5568; color: white;">
+            <i class="fi-document"></i>
+          </span>
+          <select name="type_invoce" required style="padding: 0.5rem;">
+            <option value="2">Sin Comprobante</option>
+            <option value="0">Boleta</option>
+            <option value="1">Factura</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid-x grid-margin-x" style="margin-top: 1.5rem;">
+      <div class="cell text-right">
+        <button type="button" class="button secondary" data-close style="margin-right: 0.5rem;">Cancelar</button>
+        <button type="submit" class="button success">Confirmar Venta</button>
+      </div>
+    </div>
+  </form>
+
+  <button class="close-button" data-close aria-label="Close modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<!-- === MODAL 2: REGISTRAR NUEVO CLIENTE (solo creación) === -->
+<div class="reveal" id="modal-nuevo-cliente" data-reveal style="max-width: 500px;">
+  <h4 style="color: #1a1a1a;">Registrar Nuevo Cliente</h4>
+
+  <form id="form-nuevo-cliente" method="POST" action="{% url 'venta_app:cliente-add' %}">
+    {% csrf_token %}
+
+    <div class="grid-x grid-margin-x">
+      <div class="cell">
+        <label>Nombre *</label>
+        <input type="text" name="nombre" required 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div class="cell">
+        <label>Apellido</label>
+        <input type="text" name="apellido" 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div class="cell">
+        <label>CI / RIF</label>
+        <input type="text" name="dni" maxlength="11" 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div class="cell">
+        <label>Teléfono</label>
+        <input type="text" name="telefono" 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div class="cell">
+        <label>Email</label>
+        <input type="email" name="email" 
+               style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+    </div>
+
+    <div class="grid-x grid-margin-x" style="margin-top: 1.5rem;">
+      <div class="cell text-right">
+        <button type="button" class="button secondary" data-close style="margin-right: 0.5rem;">Cancelar</button>
+        <button type="submit" class="button success">Registrar Cliente</button>
+      </div>
+    </div>
+  </form>
+
+  <button class="close-button" data-close aria-label="Close modal" type="button">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+{% endblock panel-content %}
+
+<!-- === CSS y JS: Select2 + Validación === -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    // Inicializar Select2
+    $('.select2-cliente').select2({
+      placeholder: 'Buscar cliente por nombre o CI/RIF...',
+      allowClear: true,
+      dropdownParent: $('#modal-seleccionar-cliente'),
+      width: '100%'
+    });
+
+    // Validación del formulario
+    $('#form-voucher').on('submit', function(e) {
+      const cliente = $('#id_cliente_select').val();
+      const error = $('#error-cliente');
+
+      if (!cliente) {
+        e.preventDefault();
+        error.show();
+        $('#id_cliente_select').focus();
+      } else {
+        error.hide();
+      }
+    });
+
+    // Cerrar modal de registro y abrir de selección
+    $('#modal-nuevo-cliente').on('closed.zf.reveal', function() {
+      $('#modal-seleccionar-cliente').foundation('open');
+    });
+
+    // Inicializar Foundation
+    $(document).foundation();
+  });
+</script>

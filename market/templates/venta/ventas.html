@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="grid-container" style="padding: 1.5rem 0;">
+
+  <h3 class="text-center" style="margin-bottom: 1.5rem; color: #1a1a1a;">
+    <i class="fi-shopping-cart"></i> Historial de Ventas
+  </h3>
+
+  {% if ventas %}
+    <div class="grid-x grid-margin-x">
+      <div class="cell">
+        <table class="hover stack" style="border: 1px solid #ddd; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <thead style="background: #6d28d9; color: white;">
+            <tr>
+              <th style="border-top-left-radius: 0.5rem;">N°</th>
+              <th>Fecha y Hora</th>
+              <th>Cliente</th>
+              <th>Total</th>
+              <th>Cajero</th>
+              <th style="border-top-right-radius: 0.5rem;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas %}
+              <tr style="transition: background 0.2s;">
+                <td style="padding: 0.8rem; font-weight: 600;">{{ venta.id|stringformat:"06d" }}</td>
+                <td>{{ venta.date_sale|date:"d/m/Y H:i" }}</td>
+                <td>
+                  {% if venta.cliente %}
+                    {{ venta.cliente.nombre }} {{ venta.cliente.apellido|default:"" }}
+                  {% else %}
+                    <span style="color: #999; font-style: italic;">Particular</span>
+                  {% endif %}
+                </td>
+                <td style="font-weight: 600; color: #16a34a;">S/ {{ venta.amount|floatformat:2 }}</td>
+                <td>{{ venta.user.full_name|default:venta.user.email|truncatechars:15 }}</td>
+                <td class="text-center">
+                  <div class="button-group compact">
+                    <!-- Botón: PDF Profesional -->
+                    <a href="{% url 'venta_app:venta-voucher_pdf' venta.pk %}"
+                       class="button success tiny"
+                       target="_blank"
+                       data-tooltip aria-haspopup="true"
+                       title="Descargar PDF profesional (con logo y QR)">
+                      <i class="fi-page-pdf"></i>
+                    </a>
+
+                    <!-- Botón: Comprobante Térmico -->
+                    <a href="{% url 'venta_app:venta-voucher_pdf' venta.pk %}?format=thermal"
+                       class="button warning tiny"
+                       target="_blank"
+                       data-tooltip aria-haspopup="true"
+                       title="Imprimir en térmica (80mm)">
+                      <i class="fi-print"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="callout text-center" style="background: #f8fafc; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 0.5rem; padding: 2rem; margin: 1rem 0;">
+      <i class="fi-page-search" style="font-size: 2rem; opacity: 0.6;"></i>
+      <p style="margin-top: 0.5rem; font-size: 1.1rem;">No se han registrado ventas aún.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Inicializar Foundation (tooltips) -->
+<script>
+  $(document).ready(function() {
+    $(document).foundation();
+  });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="off-canvas-wrapper">
+  <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper>
+
+    <!-- Menú Lateral (Off-canvas) -->
+    <div class="off-canvas position-left reveal-for-large" id="my-info" data-off-canvas data-position="left" style="background: #1a1a1a; color: #e0e0e0;">
+      <div class="row column" style="padding: 1rem 0;">
+        <!-- Logo / Nombre de la App -->
+        <h3 class="text-center" style="color: #ffae00; margin-bottom: 1.5rem; font-weight: 700; letter-spacing: 1px;">
+          Market DJ
+        </h3>
+
+        <!-- Menú Almacén -->
+        <ul class="vertical menu" data-accordion-menu style="margin-bottom: 1.5rem;">
+          <li>
+            <a href="#" style="color: #ffae00; font-weight: 600;">
+              <i class="fi-archive" aria-hidden="true"></i> Almacén
+            </a>
+            <ul class="nested vertical menu">
+              <li class="{% if request.resolver_match.url_name == 'producto-lista' %}active{% endif %}">
+                <a href="{% url 'producto_app:producto-lista' %}" style="color: #ffffff;">📦 Productos</a>
+              </li>
+              <li class="{% if request.resolver_match.url_name == 'producto-filtros' %}active{% endif %}">
+                <a href="{% url 'producto_app:producto-filtros' %}" style="color: #ffffff;">📊 Reportes de Productos</a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Menú Ventas -->
+          <li>
+            <a href="#" style="color: #ffae00; font-weight: 600;">
+              <i class="fi-shopping-cart" aria-hidden="true"></i> Ventas
+            </a>
+            <ul class="nested vertical menu">
+              <li class="{% if request.resolver_match.url_name == 'venta-index' %}active{% endif %}">
+                <a href="{% url 'venta_app:venta-index' %}" style="color: #ffffff;">💳 Realizar Venta</a>
+              </li>
+              <li class="{% if request.resolver_match.url_name == 'caja-index' %}active{% endif %}">
+                <a href="{% url 'caja_app:caja-index' %}" style="color: #ffffff;">CloseOperation Caja</a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Menú Administración -->
+          <li>
+            <a href="#" style="color: #ffae00; font-weight: 600;">
+              <i class="fi-torsos-all" aria-hidden="true"></i> Administración
+            </a>
+            <ul class="nested vertical menu">
+              <li class="{% if request.resolver_match.url_name == 'index-admin' %}active{% endif %}">
+                <a href="{% url 'home_app:index-admin' %}" style="color: #ffffff;">🛠️ Panel Admin</a>
+              </li>
+              <li class="{% if request.resolver_match.url_name == 'user-lista' %}active{% endif %}">
+                <a href="{% url 'users_app:user-lista' %}" style="color: #ffffff;">👥 Usuarios</a>
+              </li>
+              <li class="{% if request.resolver_match.url_name == 'admin-reporte' %}active{% endif %}">
+                <a href="{% url 'home_app:admin-reporte' %}" style="color: #ffffff;">📈 Reportes Generales</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="off-canvas-content" data-off-canvas-content>
+      <div class="grid-x">
+        <!-- Barra Superior -->
+        <div class="cell top-bar" style="background: #1a1a1a; padding: 0.8rem 1rem; border-bottom: 2px solid #ffae00;">
+          <div class="top-bar-left">
+            <span class="h5" style="color: #ffffff; font-weight: 500;">
+              Sesión de: <strong style="color: #ffae00;">{{ user.full_name }}</strong>
+            </span>
+          </div>
+          <div class="top-bar-right">
+            <a href="{% url 'users_app:user-logout' %}" class="button warning hollow" style="font-size: 0.85rem; border-color: #ffae00; color: #ffae00;">
+              <i class="fi-power"></i> Cerrar Sesión
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido del Panel -->
+      <div class="grid-container" style="padding: 1.5rem; min-height: 80vh; background: #f9f9fb; color: #333;">
+        {% block panel-content %}
+          <!-- Aquí irá el contenido específico de cada vista -->
+        {% endblock panel-content %}
+      </div>
+
+      <!-- Pie de página (opcional) -->
+      <footer class="text-center" style="padding: 1rem; background: #1a1a1a; color: #b0b0b0; font-size: 0.9rem;">
+        &copy; {{ year|default:2025 }} <strong>Market DJ</strong> - Sistema de Gestión Integral
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- Estilos personalizados (puedes moverlos a un archivo CSS externo) -->
+<style>
+  /* Asegurar fondo oscuro y buena legibilidad */
+  body {
+    background: #f0f0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  /* Efecto hover en menús */
+  .vertical.menu > li > a:hover,
+  .vertical.menu > li > a:focus {
+    background: #333;
+    color: #ffae00 !important;
+    transition: all 0.3s ease;
+  }
+
+  /* Íconos en menú */
+  .vertical.menu a i {
+    margin-right: 8px;
+    color: #ffae00;
+  }
+
+  /* Estado activo en menú */
+  .vertical.menu li.active > a {
+    background: #2d2d2d;
+    color: #ffae00 !important;
+    font-weight: 600;
+    border-left: 3px solid #ffae00;
+  }
+
+  /* Botón de logout mejorado */
+  .top-bar .button {
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  .top-bar .button:hover {
+    background: #ffae00;
+    color: #1a1a1a !important;
+  }
+
+  /* Ajuste en móviles */
+  @media screen and (max-width: 1024px) {
+    .off-canvas.position-left {
+      width: 250px;
+    }
+  }
+</style>
+
+{% endblock content %}

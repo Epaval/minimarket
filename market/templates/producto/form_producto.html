@@ -1,0 +1,237 @@
+{% extends "producto/base_producto.html" %}
+{% load static %}
+
+{% block panel-content %}
+
+<div class="grid-x grid-margin-x align-center" style="padding: 2rem 0;">
+  <h3 class="cell text-center" style="color: #1a1a1a; margin-bottom: 2rem; font-weight: 600;">
+    {% if product %}Editar Producto{% else %}Registrar Nuevo Producto{% endif %}
+  </h3>
+
+  <!-- Mensaje de éxito (tooltip) -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="cell callout success text-center"
+           style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; font-weight: 500;"
+           id="success-message">
+        <i class="fi-check" style="margin-right: 0.5rem;"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form class="cell medium-9 large-8 grid-x grid-margin-x" method="POST" id="product-form">
+    {% csrf_token %}
+
+    <!-- Código de barras -->
+    <div class="cell medium-6">
+      <label for="{{ form.barcode.id_for_label }}" style="font-weight: 500; color: #333;">Código de Barras *</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #6d28d9; color: white;">
+          <i class="fi-barcode"></i>
+        </span>
+        {{ form.barcode }}
+      </div>
+      {% for error in form.barcode.errors %}
+        <p class="form-error" style="color: #e3342f; font-size: 0.875rem; margin: 0.3rem 0;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Nombre -->
+    <div class="cell medium-6">
+      <label for="{{ form.name.id_for_label }}" style="font-weight: 500; color: #333;">Nombre del Producto *</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #1a1a1a; color: #ffae00;">
+          <i class="fi-book"></i>
+        </span>
+        {{ form.name }}
+      </div>
+      {% for error in form.name.errors %}
+        <p class="form-error" style="color: #e3342f; font-size: 0.875rem;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Proveedor -->
+    <div class="cell medium-6">
+      <label for="{{ form.provider.id_for_label }}" style="font-weight: 500; color: #333;">Proveedor</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #4a5568; color: white;">
+          <i class="fi-torsos"></i>
+        </span>
+        {{ form.provider }}
+      </div>
+    </div>
+
+    <!-- Marca -->
+    <div class="cell medium-6">
+      <label for="{{ form.marca.id_for_label }}" style="font-weight: 500; color: #333;">Marca</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #4a5568; color: white;">
+          <i class="fi-pricetag-multiple"></i>
+        </span>
+        {{ form.marca }}
+      </div>
+    </div>
+
+    <!-- Unidad de Medida -->
+    <div class="cell medium-6">
+      <label for="{{ form.unit.id_for_label }}" style="font-weight: 500; color: #333;">Unidad de Medida</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #4a5568; color: white;">
+          <i class="fi-ruler"></i>
+        </span>
+        {{ form.unit }}
+      </div>
+    </div>
+
+    <!-- Fecha de Vencimiento -->
+    <div class="cell medium-6">
+      <label for="{{ form.due_date.id_for_label }}" style="font-weight: 500; color: #333;">Fecha de Vencimiento</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #4a5568; color: white;">
+          <i class="fi-calendar"></i>
+        </span>
+        {{ form.due_date }}
+      </div>
+    </div>
+
+    <!-- Precio Compra -->
+    <div class="cell medium-6">
+      <label for="{{ form.purchase_price.id_for_label }}" style="font-weight: 500; color: #333;">Precio de Compra *</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #1a1a1a; color: #ffae00;">
+          <i class="fi-dollar"></i>
+        </span>
+        {{ form.purchase_price }}
+      </div>
+      {% for error in form.purchase_price.errors %}
+        <p class="form-error" style="color: #e3342f; font-size: 0.875rem;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Precio Venta -->
+    <div class="cell medium-6">
+      <label for="{{ form.sale_price.id_for_label }}" style="font-weight: 500; color: #333;">Precio de Venta *</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #1a1a1a; color: #ffae00;">
+          <i class="fi-credit-card"></i>
+        </span>
+        {{ form.sale_price }}
+      </div>
+      {% for error in form.sale_price.errors %}
+        <p class="form-error" style="color: #e3342f; font-size: 0.875rem;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Cantidad en Almacén -->
+    <div class="cell medium-12">
+      <label for="{{ form.count.id_for_label }}" style="font-weight: 500; color: #333;">Cantidad en Almacén *</label>
+      <div class="input-group">
+        <span class="input-group-label" style="background: #4a5568; color: white;">
+          <i class="fi-list-number"></i>
+        </span>
+        {{ form.count }}
+      </div>
+      {% for error in form.count.errors %}
+        <p class="form-error" style="color: #e3342f; font-size: 0.875rem;">{{ error }}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Descripción -->
+    <div class="cell medium-12">
+      <label for="{{ form.description.id_for_label }}" style="font-weight: 500; color: #333;">Descripción del Producto</label>
+      <div class="input-group">
+        {{ form.description }}
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="cell grid-x align-center medium-12" style="margin-top: 2rem;">
+      <div class="cell small-6 medium-4">
+        <button type="submit" class="button success expanded" style="background: #6d28d9; border: none; font-weight: 600; border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);">
+          <i class="fi-save"></i> {% if product %}Actualizar{% else %}Guardar{% endif %}
+        </button>
+      </div>
+      {% if product %}
+        <div class="cell small-6 medium-4">
+          <a href="{% url 'producto_app:producto-delete' product.id %}" 
+             class="button alert expanded" 
+             style="border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);"
+             onclick="return confirm('¿Estás seguro de eliminar este producto?');">
+            <i class="fi-trash"></i> Eliminar
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Validación con JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("product-form");
+    const barcode = document.getElementById("id_barcode");
+    const name = document.getElementById("id_name");
+    const purchasePrice = document.getElementById("id_purchase_price");
+    const salePrice = document.getElementById("id_sale_price");
+    const count = document.getElementById("id_count");
+
+    // Mostrar tooltip de éxito si hay mensaje
+    const successMsg = document.getElementById("success-message");
+    if (successMsg) {
+      setTimeout(() => {
+        successMsg.style.transition = "opacity 0.5s ease";
+        successMsg.style.opacity = "0";
+        setTimeout(() => successMsg.remove(), 500);
+      }, 3000); // Desaparece a los 3 segundos
+    }
+
+    // Validación en tiempo real
+    form.addEventListener("submit", function (e) {
+      let isValid = true;
+
+      // Limpiar errores previos
+      document.querySelectorAll(".form-error").forEach(el => el.remove());
+
+      // Validar campos requeridos
+      if (!barcode.value.trim()) {
+        showError(barcode, "El código de barras es obligatorio.");
+        isValid = false;
+      }
+      if (!name.value.trim()) {
+        showError(name, "El nombre del producto es obligatorio.");
+        isValid = false;
+      }
+      if (!purchasePrice.value || purchasePrice.value <= 0) {
+        showError(purchasePrice, "El precio de compra debe ser mayor a 0.");
+        isValid = false;
+      }
+      if (!salePrice.value || salePrice.value <= 0) {
+        showError(salePrice, "El precio de venta debe ser mayor a 0.");
+        isValid = false;
+      }
+      if (parseFloat(salePrice.value) < parseFloat(purchasePrice.value)) {
+        showError(salePrice, "El precio de venta no puede ser menor al de compra.");
+        isValid = false;
+      }
+      if (!count.value || count.value < 0) {
+        showError(count, "La cantidad debe ser 0 o mayor.");
+        isValid = false;
+      }
+
+      if (!isValid) {
+        e.preventDefault();
+      }
+    });
+
+    function showError(input, message) {
+      const error = document.createElement("p");
+      error.className = "form-error";
+      error.style = "color: #e3342f; font-size: 0.875rem; margin: 0.3rem 0;";
+      error.textContent = message;
+      input.parentElement.parentElement.after(error);
+    }
+  });
+</script>
+
+{% endblock panel-content %}
